@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
+import 'task_repository.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(HomeScreen());
 }
-class MyApp extends StatelessWidget {
 
-  List<Task> tasks = [
-    Task(title: "Projekt Flutter", deadline: "do jutra", priority:  "wysoki", done: false),
-    Task(title: "Ćwiczenia z matematyki", deadline: "nigdy", priority:  "średni", done: false),
-    Task(title: "Przeczytać o widgetach", deadline: "w tym miesiącu", priority:  "niski", done: true),
-    Task(title: "Spać", deadline: "do jutra", priority:  "wysoki", done: false),
-  ];
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState() => _MyApp();
+}
 
+class _MyApp extends State<HomeScreen>{
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: MyHome()
+    );
+  }
+}
+
+class MyHome extends StatefulWidget{
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,7 +39,7 @@ class MyApp extends StatelessWidget {
           padding: EdgeInsets.all(16),
           child: Column(
            children: [
-             Text("Masz dziś ${tasks.length} zadania"),
+             Text("Masz dziś ${TaskRepository.tasks.length} zadania"),
              SizedBox(height: 16),
              Text(
                "Dzisiejsze zadania",
@@ -42,26 +51,92 @@ class MyApp extends StatelessWidget {
              ),
              Expanded (
                child:  ListView.builder(
-          itemCount: tasks.length,
+          itemCount: TaskRepository.tasks.length,
           itemBuilder: (context, index) {
-            return TaskCard(title: tasks[index].title, subtitle: tasks[index].deadline, icon: tasks[index].done ? Icons.check_circle : Icons.radio_button_unchecked);
+            return TaskCard(title: TaskRepository.tasks[index].title, subtitle: TaskRepository.tasks[index].deadline, icon: TaskRepository.tasks[index].done ? Icons.check_circle : Icons.radio_button_unchecked);
           },
         ),
              ),
           ],
           ),
     ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            final Task? newTask = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddTaskScreen(),
+              ),
+            );
+            if (newTask != null) {
+              setState(() {
+                TaskRepository.tasks.add(newTask);
+              });
+            }
+          },
+          child: Icon(Icons.add),
         ),
+      ),
       );
   }
 }
 
-class Task {
-  final String title;
-  final String deadline;
-  final bool done;
-  final String priority;
-  Task({required this.title, required this.deadline, required this.priority, required this.done});
+class AddTaskScreen extends StatelessWidget {
+  AddTaskScreen({super.key});
+
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController deadlineController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Nowe zadanie"),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: "Tytuł zadania",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: TextEditingController(),
+              decoration: InputDecoration(
+                labelText: "Termin",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: "Piorytet",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {final newTask = Task(
+                title: titleController.text,
+                deadline: deadlineController.text,
+                done: false,
+                priority: deadlineController.text,
+              );
+              Navigator.pop(context, newTask);},
+              child: Text("Zapisz"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class TaskCard extends StatelessWidget {
