@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'task_repository.dart';
 
 void main() {
-  runApp(HomeScreen());
+  runApp(MaterialApp(home: HomeScreen(),));
 }
 
 class HomeScreen extends StatefulWidget {
@@ -14,17 +14,7 @@ class HomeScreen extends StatefulWidget {
 class _MyApp extends State<HomeScreen>{
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: MyHome()
-    );
-  }
-}
-
-class MyHome extends StatefulWidget{
-  @override
-  Widget build(BuildContext context) {`
-    return MaterialApp(
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: Text(
             "Lista zadań",
@@ -64,8 +54,18 @@ class MyHome extends StatefulWidget{
           onPressed: () async {
             final Task? newTask = await Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => AddTaskScreen(),
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => AddTaskScreen(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  final offsetAnimation = Tween<Offset>(
+                    begin: Offset(1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(animation);
+                  return SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  );
+                },
               ),
             );
             if (newTask != null) {
@@ -76,7 +76,6 @@ class MyHome extends StatefulWidget{
           },
           child: Icon(Icons.add),
         ),
-      ),
       );
   }
 }
@@ -86,6 +85,7 @@ class AddTaskScreen extends StatelessWidget {
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController deadlineController = TextEditingController();
+  final TextEditingController priorityController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +107,7 @@ class AddTaskScreen extends StatelessWidget {
             ),
             SizedBox(height: 10),
             TextField(
-              controller: TextEditingController(),
+              controller: deadlineController,
               decoration: InputDecoration(
                 labelText: "Termin",
                 border: OutlineInputBorder(),
@@ -115,9 +115,9 @@ class AddTaskScreen extends StatelessWidget {
             ),
             SizedBox(height: 10),
             TextField(
-              controller: titleController,
+              controller: priorityController,
               decoration: InputDecoration(
-                labelText: "Piorytet",
+                labelText: "Priorytet",
                 border: OutlineInputBorder(),
               ),
             ),
