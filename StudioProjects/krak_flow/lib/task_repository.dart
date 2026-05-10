@@ -1,10 +1,5 @@
 class TaskRepository {
-  static List<Task> tasks = [
-    Task(title: "Projekt Flutter", deadline: "do jutra", priority:  "wysoki", done: false),
-    Task(title: "Ćwiczenia z matematyki", deadline: "nigdy", priority:  "średni", done: false),
-    Task(title: "Przeczytać o widgetach", deadline: "w tym miesiącu", priority:  "niski", done: true),
-    Task(title: "Spać", deadline: "do jutra", priority:  "wysoki", done: false),
-  ];
+  static List<Task> tasks = [];
 }
 
 class Task {
