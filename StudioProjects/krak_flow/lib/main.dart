@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'task_repository.dart';
 import '../services/task_api_service.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import '../services/task_sync_service.dart';
+import '../services/task_local_database.dart';
+import 'dart:math';
 
-void main() {
+void main() async {
+  await Hive.initFlutter(); // inicjalizacja
+  await Hive.openBox("tasks"); // otwarcie kontenera
   runApp(MaterialApp(home: HomeScreen(),));
 }
 
@@ -79,7 +85,7 @@ class _MyApp extends State<HomeScreen>{
           padding: EdgeInsets.all(16),
           child: Column(
            children: [
-             Text("Masz dziś ${TaskRepository.tasks.length} zadania"),
+             Text("Masz dziś ${TaskRepository.tasks.length} zadań."),
              SizedBox(height: 8),
              Row(
                children: [
@@ -173,8 +179,10 @@ class _MyApp extends State<HomeScreen>{
               ),
             );
             if (newTask != null) {
+              await TaskLocalDatabase.addTask(newTask);
+
               setState(() {
-                TaskRepository.tasks.add(newTask);
+                TaskLocalDatabase.addTask(newTask);
               });
             }
           },
@@ -228,6 +236,7 @@ class AddTaskScreen extends StatelessWidget {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {final newTask = Task(
+                id: Random().nextInt(1000000),
                 title: titleController.text,
                 deadline: deadlineController.text,
                 done: false,
@@ -290,6 +299,7 @@ class EditTaskScreen extends StatelessWidget{
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {final updatedTask = Task(
+                id: Random().nextInt(1000000),
                 title: titleController.text,
                 deadline: deadlineController.text,
                 done: false,
@@ -362,7 +372,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
   @override
   void initState() {
     super.initState();
-    tasksFuture = TaskApiService.fetchTasks();
+    tasksFuture = loadTasks();
+  }
+
+  Future<List<Task>> loadTasks() async {
+    await TaskSyncService.loadInitialDataIfNeeded();
+    return TaskLocalDatabase.getTasks();
   }
 
   @override
@@ -390,7 +405,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        tasksFuture = TaskApiService.fetchTasks();
+                        tasksFuture = loadTasks();
                       });
                     },
                     child: const Text("Spróbuj ponownie"),
@@ -440,9 +455,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       title: task.title,
                       subtitle: "termin: ${task.deadline} | piorytet: ${task.priority}",
                       done: task.done,
-                      onChanged: (value) {
+                      onChanged: (value) async {
+                        final updatedTask = Task(
+                          id: task.id,
+                          title: task.title,
+                          deadline: task.deadline,
+                          priority: task.priority,
+                          done: value ?? false,
+                        );
+                        await TaskLocalDatabase.updateTask(updatedTask);
                         setState(() {
-                          task.done = value!;
+                          tasksFuture = loadTasks();
                         });
                       },
                       onTap: () async {
@@ -453,8 +476,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
                           ),
                         );
                         if (updatedTask != null) {
+                          await TaskLocalDatabase.updateTask(updatedTask);
+
                           setState(() {
-                            TaskRepository.tasks[index] = updatedTask;
+                            tasksFuture = loadTasks();
                           });
                         }
                       }),

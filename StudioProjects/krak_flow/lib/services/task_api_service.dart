@@ -17,6 +17,7 @@ class TaskApiService {
       final List todos = data["todos"];
       return todos.map((todo) {
         return Task(
+          id: Random().nextInt(1000000),
           title: todo["todo"],
           deadline: deadlines[random.nextInt(deadlines.length)], // brak w API → mockujemy
           done: todo["completed"],
