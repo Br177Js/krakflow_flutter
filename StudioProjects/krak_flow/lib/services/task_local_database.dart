@@ -10,6 +10,22 @@ class TaskLocalDatabase {
       return Task.fromMap(Map<String, dynamic>.from(item));
     }).toList();
   }
+  //zrobine zadania
+  static List<Task> doneTasks() {
+    return _box.values.map((item) {
+      return Task.fromMap(Map<String, dynamic>.from(item));
+    })
+        .where((item) => item.done)
+        .toList();
+  }
+  //niezrobione zadania
+  static List<Task> undoneTasks() {
+    return _box.values.map((item) {
+      return Task.fromMap(Map<String, dynamic>.from(item));
+    })
+        .where((item) => !item.done)
+        .toList();
+  }
   static Future<void> saveTasks(List<Task> tasks) async {
     await _box.clear();
 // zapisuje zadanie pod kluczem równym jego id
